@@ -5,7 +5,7 @@ local JSON = require "JSON"
 local serverMessage = require 'serverMessage'
 local blobClient = require 'blobClient'
 local inspect = require 'inspect'
--- local http = require 'resty.http'
+local http = require 'resty.http'
 
 -- function _M.run()
 --     ngx.log(ngx.INFO, 'Hello from startup!');
@@ -52,7 +52,46 @@ end
 
 function sendToGoogleCloudServer(account, sm)
   local desc = monitored[account]
-  -- ngx.log(ngx.INFO, 'Hi ! ', inspect(desc))
+  -- ngx.log(ngx.INFO, 'sendToGoogleCloudServer', inspect(desc))
+  ngx.log(ngx.INFO, 'sendToGoogleCloudServer ', account)
+  local dataToSend = { registration_ids = { "1" }, data = sm }
+  local httpc = http.new()
+  local res, err = httpc:request_uri("https://android.googleapis.com/gcm/send", {
+    ssl_verify = false,
+    method = "POST",
+    body = JSON:encode(dataToSend),
+    headers = {
+      ['Content-Type'] = 'application/json',
+      ["Authorization"] = 'key=AIzaSyAeyN5dT-TZHHJ5Z4C9mWHpkz8XADRKxWI'
+    }
+  })
+
+  if not res then
+    ngx.log(ngx.ERR, "failed to request: ", err)
+    return
+  end  
+  for k,v in pairs(res.headers) do
+    --
+  end
+  ngx.log(ngx.INFO, 'status ', res.status)
+  ngx.log(ngx.INFO, res.body)
+  local response
+  local status, err = pcall(function()
+    response = JSON:decode(res.body)
+  end)
+  -- print('status', status, 'err', err)
+  if not status then
+    -- error happened
+    return
+  end
+  -- ngx.log(ngx.INFO, 'response ', inspect(response))
+  for k, v in pairs(response.results) do
+    -- ngx.log(ngx.INFO, 'result ', inspect(v))
+    if v.error == 'InvalidRegistration' then
+      -- @TODO remove registration id
+      ngx.log(ngx.INFO, 'result error - need to remove registration id', inspect(v))
+    end
+  end 
 end
 
 function timed()
