@@ -1,2 +1,4 @@
 src/src/logs/
 src/.vagrant/
+*.sublime-project
+*.sublime-workspace

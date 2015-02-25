@@ -73,6 +73,7 @@ function serverMessage:parsePayment()
   payment.destination = data.transaction.Destination
   payment.fee = data.transaction.Fee
   payment.date = data.transaction.date
+  payment.hash = data.transaction.hash
 
   self.payment = payment
   -- log(ngx.INFO, 'payment:', inspect(self.payment))
@@ -109,8 +110,17 @@ end
 --  *
 --  * JavaScript timestamps are unix epoch in milliseconds.
 --  */
-function toTimestamp(rpepoch)
+function serverMessage.toTimestamp(rpepoch)
   return (rpepoch + 0x386D4380) * 1000
+end
+
+-- /**
+--  * Convert a ripple epoch to a JavaScript timestamp.
+--  *
+--  * JavaScript timestamps are unix epoch in seconds.
+--  */
+function serverMessage.toTimestampSeconds(rpepoch)
+  return rpepoch + 0x386D4380
 end
 
 -- /**
